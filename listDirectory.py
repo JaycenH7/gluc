@@ -22,9 +22,12 @@ class Listing:
 
   def parse_args(self):
     parser = argparse.ArgumentParser(description='This is a demo script for Podomatic')
-    parser.add_argument('target_directory', help='directory to list files and directories')
-    parser.add_argument('-f','--files', help='list only files', action="store_true")
-    parser.add_argument('-d','--directories', help='list only directories', action="store_true")
+    parser.add_argument(
+      'target_directory', nargs='?', default='.'
+    , help='directory to list files and directories, uses current directory by default'
+    )
+    parser.add_argument('-f','--files', action="store_true", help='list only files')
+    parser.add_argument('-d','--directories', action="store_true", help='list only directories')
     return parser.parse_args()
 
   def get_dir(self, p_args):
@@ -38,13 +41,12 @@ class Listing:
         print li
 
   def print_list_file(self, p_args, p_dir_list, p_dir_name):
-    dir_name = p_args.target_directory
     for li in p_dir_list:
       if os.path.isfile(os.path.join(p_dir_name, li)):
         print li
 
   def print_list(self, p_dir_list):
     for li in p_dir_list:
-        print li
+      print li
 
 Listing()
