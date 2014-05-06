@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/bin/python
 
 import os
 import argparse
@@ -19,18 +19,18 @@ class Listing:
     }
 
     # evaluate arguments
+    itr = 0
     for key_arg, val_arg in p_args.__dict__.iteritems():
 
       # evaluate options, match to arguments
       for key_opt, val_opt in options.iteritems():
-        itr = 0
 
         if key_arg == key_opt and val_arg == True:
           val_opt(p_args, dir_list, dir_name)
           itr += 1
 
-        if key_opt == 'none' and itr == 0:
-          val_opt(dir_list)
+    if key_opt == 'none' and itr == 0:
+      val_opt(dir_list)
 
     # if p_args.directories:
     #   self.print_list_dir(p_args, dir_list, dir_name)
