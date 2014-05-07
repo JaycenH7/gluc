@@ -21,23 +21,12 @@ class Listing:
     # evaluate arguments
     itr = 0
     for key_arg, val_arg in p_args.__dict__.iteritems():
+      if val_arg == True:
+        options[key_arg](p_args, dir_list, dir_name)
+        itr += 1
 
-      # evaluate options, match to arguments
-      for key_opt, val_opt in options.iteritems():
-
-        if key_arg == key_opt and val_arg == True:
-          val_opt(p_args, dir_list, dir_name)
-          itr += 1
-
-    if key_opt == 'none' and itr == 0:
-      val_opt(dir_list)
-
-    # if p_args.directories:
-    #   self.print_list_dir(p_args, dir_list, dir_name)
-    # elif p_args.files:
-    #   self.print_list_file(p_args, dir_list, dir_name)
-    # else:
-    #   self.print_list(dir_list)
+    if itr == 0:
+        options['none'](dir_list)
 
   def get_dir(self, p_args):
     dir_name = p_args.target_directory
