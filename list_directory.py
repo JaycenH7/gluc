@@ -7,55 +7,75 @@ class Listing:
   "list files and directories"
 
   def __init__(self,p_args):
+    opt = self.run_options(p_args)
     if p_args.long:
-      self.run_long(p_args)
+      self.run_long(p_args,opt)
     else:
-      self.run_list(p_args)
+      self.run_default(p_args,opt)
 
-  def run_list(self,p_args):
-    dir_list = self.get_dir(p_args)
-    dir_name = p_args.target_directory
-    options = {
-      'directories' : self.print_list_dir,
-      'files'       : self.print_list_file,
-      'none'        : self.print_list
+  def run_options (self,p_args):
+    opt = {}
+    opt['dir_name'] = p_args.target_directory
+    opt['dir_list'] = os.listdir(p_args.target_directory)
+    return opt
+
+  def run_default(self, p_args, opt):
+    print_dict = {
+      'directories' : self.path_dir,
+      'files'       : self.path_file
     }
 
-    # evaluate arguments
+    if p_args.long:
+      p_args.__dict___['long'] = False
+      long_arg = True
+
     itr = 0
     for key, val in p_args.__dict__.iteritems():
       if val == True:
-        options[key](p_args, dir_list, dir_name)
         itr += 1
+        for li in opt['dir_list']:
+          if print_dict[key](li,opt):
+            print li
 
     if itr == 0:
-        options['none'](dir_list)
-
-  def get_dir(self, p_args):
-    dir_name = p_args.target_directory
-    dir_list = os.listdir(dir_name)
-    return dir_list
-
-  def print_list_dir(self, p_args, p_dir_list, p_dir_name):
-    for li in p_dir_list:
-      if os.path.isdir(os.path.join(p_dir_name, li)):
+      for li in opt['dir_list']:
         print li
 
-  def print_list_file(self, p_args, p_dir_list, p_dir_name):
-    for li in p_dir_list:
-      if os.path.isfile(os.path.join(p_dir_name, li)):
-        print li
+  def path_dir(self, dir_, opt):
+    if os.path.isdir(os.path.join(opt['dir_name'],dir_)):
+      return True
 
-  def print_list(self, p_dir_list):
-    for li in p_dir_list:
-      print li
+  def path_file(self, file_, opt):
+    if os.path.isfile(os.path.join(opt['dir_name'],file_)):
+      return True
 
-  def run_long(self, p_args):
-    stat_info = os.lstat(p_args.target_directory)
+  def run_long(self, p_args, opt):
+    print_dict = {
+      'directories' : self.path_dir,
+      'files'       : self.path_file
+    }
+
+    p_args.__dict__['long']=False
+
+    itr = 0
+    for key, val in p_args.__dict__.iteritems():
+      if val == True:
+        itr += 1
+        for li in opt['dir_list']:
+          if print_dict[key](li,opt):
+            self.print_stat(li,opt)
+
+    if itr == 0:
+      for li in opt['dir_list']:
+        self.print_stat(li,opt)
+
+  def print_stat(self,item,opt):
+    file = os.path.join(opt['dir_name'],item)
+    stat_info = os.lstat(file)
     self.check_stat(stat_info)
-    self.print_long_more(stat_info, p_args)
+    self.print_long_more(stat_info, item)
 
-  def check_stat(self, p_stat_info):
+  def check_stat(self, stat_info):
     type_dict = {
         stat.S_ISDIR:'d',
         stat.S_ISLNK:'l',
@@ -71,29 +91,34 @@ class Listing:
     }
 
     for key, val in sorted(type_dict.iteritems()):
-      if key(p_stat_info.st_mode):
+      if key(stat_info.st_mode):
         sys.stdout.write(val)
 
     for key, val in sorted(perm_dict.iteritems(), reverse=True):
-      if bool(p_stat_info.st_mode & key):
+      if bool(stat_info.st_mode & key):
         sys.stdout.write(val)
       else:
         sys.stdout.write('-')
 
-
-  def print_long_more(self, p_stat_info, p_args):
-    print '',
-    print p_stat_info.st_nlink,
-    print getpwuid(p_stat_info.st_uid).pw_name,
-    print p_stat_info.st_size,
-    print time.strftime(
-      "%B %d %H:%M"
-    , time.localtime(p_stat_info.st_mtime)
-    ),
-    print p_args.target_directory
-    sys.stdout.write('\n')
-
-
+  def print_long_more(self, stat_info, stat_name):
+    if stat_info.st_size > 10240:
+      st_size = str(format(stat_info.st_size/1024.0,'.0f'))+"K"
+    elif stat_info.st_size > 1024:
+      st_size = str(format(stat_info.st_size/1024.0,'.1f'))+"K"
+    else:
+      st_size = stat_info.st_size
+    fmt = '{:<0} {:<1} {:<4} {:<4} {:<4} {:<4}'
+    print(fmt.format(
+      '',
+      stat_info.st_nlink,
+      getpwuid(stat_info.st_uid).pw_name,
+      st_size,
+      time.strftime(
+        "%b %d %H:%M"
+      , time.localtime(stat_info.st_mtime)
+      ),
+      stat_name
+    ))
 
 class Parse_Arguments:
   "parses command-line arguments"
