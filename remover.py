@@ -41,5 +41,5 @@ class Parse_Arguments:
     , help='source file/directory to move from'
     )
     return parser.parse_args()
-
-Remover(Parse_Arguments().parse_args())
+if __name__ == '__main__':
+  Remover(Parse_Arguments().parse_args())

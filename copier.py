@@ -16,10 +16,12 @@ class Copier:
       else: print error
 
   def copy_file( self, p_src, p_tgt ):
+    """copy a file"""
     file_read = file( p_src, 'r' ).read()
     file_write = file( p_tgt, 'w' ).write( file_read )
 
   def copy_dir( self, p_args ):
+    """copy a directory"""
     root_src_dir = os.path.join( '.', p_args.source )
     root_tgt_dir = os.path.join( '.', p_args.target )
 
@@ -45,6 +47,10 @@ class Parse_Arguments:
     self.parse_args()
 
   def parse_args( self ):
+    """
+    parse arguments for source file/directory and 
+    target file/directory
+    """
     parser = argparse.ArgumentParser(
         description = 'copy files/directories from source to destination'
     )
@@ -56,4 +62,5 @@ class Parse_Arguments:
     )
     return parser.parse_args()
 
-Copier(Parse_Arguments().parse_args())
+if __name__ == '__main__':
+  Copier(Parse_Arguments().parse_args())

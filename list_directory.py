@@ -4,7 +4,7 @@ import os, argparse, stat, sys, time
 from pwd import getpwuid
 
 class Listing:
-  "list files and directories"
+  """list files and directories"""
 
   def __init__(self,p_args):
     opt = self.run_options(p_args)
@@ -14,12 +14,14 @@ class Listing:
       self.run_default(p_args,opt)
 
   def run_options (self,p_args):
+    """instantiate options hash from given arguments"""
     opt = {}
     opt['dir_name'] = p_args.target_directory
     opt['dir_list'] = os.listdir(p_args.target_directory)
     return opt
 
   def run_default(self, p_args, opt):
+    """default(short) listing format of files/directories"""
     print_dict = {
       'directories' : self.path_dir,
       'files'       : self.path_file
@@ -42,14 +44,17 @@ class Listing:
         print li
 
   def path_dir(self, dir_, opt):
+    """return if directory content is a directory"""
     if os.path.isdir(os.path.join(opt['dir_name'],dir_)):
       return True
 
   def path_file(self, file_, opt):
+    """return if directory content is a file"""
     if os.path.isfile(os.path.join(opt['dir_name'],file_)):
       return True
 
   def run_long(self, p_args, opt):
+    """long listing format of files/directories"""
     print_dict = {
       'directories' : self.path_dir,
       'files'       : self.path_file
@@ -70,12 +75,14 @@ class Listing:
         self.print_stat(li,opt)
 
   def print_stat(self,item,opt):
+    """print permissions, owner and other info of a given file/directory"""
     file = os.path.join(opt['dir_name'],item)
     stat_info = os.lstat(file)
     self.check_stat(stat_info)
     self.print_long_more(stat_info, item)
 
   def check_stat(self, stat_info):
+    """check permissions and file type"""
     type_dict = {
         stat.S_ISDIR:'d',
         stat.S_ISLNK:'l',
@@ -101,6 +108,7 @@ class Listing:
         sys.stdout.write('-')
 
   def print_long_more(self, stat_info, stat_name):
+    """print file size, hard links and last time file was modified"""
     if stat_info.st_size > 10240:
       st_size = str(format(stat_info.st_size/1024.0,'.0f'))+"K"
     elif stat_info.st_size > 1024:
@@ -142,5 +150,5 @@ class Parse_Arguments:
     return parser.parse_args()
 
 
-
-Listing(Parse_Arguments().parse_args())
+if __name__ == '__main__':
+  Listing(Parse_Arguments().parse_args())

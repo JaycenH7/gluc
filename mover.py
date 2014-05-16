@@ -58,4 +58,5 @@ class Parse_Arguments:
     )
     return parser.parse_args()
 
-Mover(Parse_Arguments().parse_args())
+if __name__ == '__main__':
+  Mover(Parse_Arguments().parse_args())

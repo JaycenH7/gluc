@@ -30,5 +30,5 @@ class Parse_Arguments:
     )
     return parser.parse_args()
 
-
-Shutil_Move(Parse_Arguments().parse_args())
+if __name__ == '__main__':
+  Shutil_Move(Parse_Arguments().parse_args())
