@@ -8,16 +8,17 @@ import errno
 syntax
   gluster_ = identity ":/" volume/path [:port]
     identity       = ip_addr | host_name
+    port(optional) = num
     volume
     path
-    port(optional) = num
 
 example:
   gluster://storage.int.example.net/bigfiles/iso-images
   gluster://storage.int.example.net:80/bigfiles/iso-images
-    identity = storage.int.example.net (host name)
+    host   = storage.int.example.net
+    port   = 80
     volume = bigfiles
-    path = iso-images
+    path   = iso-images
 """
 
 class Gluster_Listing:
@@ -27,8 +28,8 @@ class Gluster_Listing:
   def __init__( self ):
     # gluster_volume = 'luster://storage.int.example.net/bigfiles/iso-images'
     # gluster_volume = 'gluster://storage.int.example.net/bigfiles/iso-images'
-    # gluster_volume = 'gluster://storage.int.example.net:80/bigfiles/iso-images'
-    gluster_volume = 'gluster://209.49.13.42:80/bigfiles/iso-images'
+    gluster_volume = 'gluster://storage.int.example.net:80/bigfiles/iso-images'
+    # gluster_volume = 'gluster://209.49.13.42:80/bigfiles/iso-images'
     self.parse_gluster_volume(gluster_volume)
 
   def parse_gluster_volume( self, gluster_volume ):
@@ -47,9 +48,9 @@ class Gluster_Listing:
 
     self.print_gluster_volume(gluster_volume)
     self.print_identity(identity)
+    self.print_port(port)
     self.print_volume(volume)
     self.print_path(path)
-    self.print_port(port)
 
   def print_gluster_volume( self, gluster_volume ):
     print 'gluster volume:', gluster_volume
@@ -62,7 +63,8 @@ class Gluster_Listing:
       print 'Host name:', identity
 
   def print_port( self, port):
-    print 'port:', port
+    if port:
+      print 'port:', port
 
   def print_volume( self, volume):
     print 'volume:' , volume

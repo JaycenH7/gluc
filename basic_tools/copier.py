@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
-import os
-import argparse
-import errno
+import gfapi
+import gluster_parse, gluster_mount
+import os, argparse, errno
 
 class Copier:
   "copies files and directories from source to destination"
@@ -35,10 +35,11 @@ class Copier:
       for file_ in files:
         src_file = os.path.join( src_dir, file_ )
         tgt_file = os.path.join( tgt_dir, file_ )
+
         if os.path.exists( tgt_file ):
           os.remove( tgt_file )
-        else:
-          self.copy_file( src_file, tgt_file )
+
+        self.copy_file( src_file, tgt_file )
 
 class Parse_Arguments:
   "parses command-line arguments"
