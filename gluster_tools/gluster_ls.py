@@ -91,15 +91,21 @@ class Parse_Arguments:
     return parser.parse_args().__dict__
 
 def main():
-  a_parser = Parse_Arguments()
-  g_parser = gluster_parse.Parser()
-  p_args   = a_parser.parse_args()
-  g_args   = g_parser.parse(p_args['gluster_url'])
+  a_parser  = Parse_Arguments()
+  p_args    = a_parser.parse_args()
 
-  gluster = gfapi.Volume(g_args['host'], g_args['volume'])
-  gluster.mount()
+  g_parser  = gluster_parse.Parser()
+  g_args    = g_parser.parse( p_args['gluster_url'] )
 
-  Listing(p_args, g_args, gluster)
+  g_mounter = gluster_mount.Mounter()
+  g_mount   = g_mounter.mount( g_args )
+
+  Listing(p_args, g_args, g_mount)
+
+  # gluster = gfapi.Volume(g_args['host'], g_args['volume'])
+  # gluster.mount()
+
+  # Listing(p_args, g_args, gluster)
 
 if __name__ == '__main__':
   main()
