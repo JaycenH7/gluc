@@ -46,7 +46,7 @@ class Parser:
     g_args = {}
 
     try:
-      g_args_match = re.match('^(?:gluster://)(.*)/(.*[^/])(/.*)?$', volume).groups()
+      g_args_match = re.match('^(?:gluster://)([^/]*)/([^/]*)(/.*)?$', volume).groups()
     except:
       print 'Error: enter a valid volume URL'
       raise SystemExit

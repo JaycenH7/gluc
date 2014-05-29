@@ -7,21 +7,30 @@ import os, sys, argparse, errno, re
 class Copier:
    "copies files and directories across gluster volumes"
 
-   def __init__( self, p_args, g_args, gluster ):
-      self.eval_exist( g_args, gluster )
-      self.run_copy( g_args, gluster )
+   def __init__( self, p_args, g_args, g_mount ):
+      # declare instance variables
+      self.src_mount = g_mount['source']
+      self.src_path  = g_args['source']['path']
+      self.tgt_mount = g_mount['target']
+      self.tgt_path  = g_args['target']['path']
 
-   def eval_exist( self, g_args, gluster ):
-      if not gluster['source'].exists(g_args['source']['path']):
-         print 'error:', g_args['source']['path'], 'does not exist'
+      #run program
+      self.eval_exist()
+      self.run_copy()
+
+   def eval_exist( self ):
+      if not self.src_mount.exists(self.src_path):
+         print 'error:', self.src_path, 'does not exist'
          raise SystemExit
-      if gluster['target'].exists(g_args['target']['path']):
-         self.eval_file( g_args, gluster )
-      elif gluster['source'].isfile(g_args['source']['path']):
-         self.create_file(g_args['target']['path'], gluster)
 
-   def eval_file( self, g_args, gluster ):
-      if gluster['target'].isfile(g_args['target']['path']):
+      if self.tgt_mount.exists(self.tgt_path):
+         self.eval_file()
+
+      elif self.src_mount.isfile( self.src_path ):
+         self.create_file( self.tgt_path)
+
+   def eval_file( self ):
+      if self.tgt_mount.isfile( self.tgt_path ):
          print 'overwrite?',
          response = raw_input()
          try:
@@ -29,56 +38,57 @@ class Copier:
          except:
             raise SystemExit
 
-   def create_file( self, g_tgt, gluster ):
-      gluster['target'].open(g_tgt, os.O_CREAT)
+   def create_file( self, path ):
+      self.tgt_mount.open( path, os.O_CREAT )
 
-   def run_copy( self, g_args, gluster ):
-      g_src = g_args['source']['path']
-      g_tgt = g_args['target']['path']
+   def run_copy( self ):
+      try:
+         self.copy_file( self.src_path, self.tgt_path)
 
-   try:
-      self.copy_file( g_src, g_tgt, gluster )
-   except OSError as error:
-      if error.errno == errno.EISDIR:
-        self.copy_dir( g_args, gluster )
-      else: print error
+      except OSError as error:
+         if error.errno == errno.EISDIR:
+           self.copy_dir() 
+         else: print error
 
-   def copy_file( self, g_src, g_tgt, gluster ):
-      file_src = gluster['source'].open(
-         g_src, os.O_RDONLY
+   def copy_file( self, source, target ):
+      file_src = self.src_mount.open(
+         source, os.O_RDONLY
       )
-      file_tgt = gluster['target'].open(
-         g_tgt, os.O_WRONLY
+      file_tgt = self.tgt_mount.open(
+         target, os.O_WRONLY
       )
+
       try:
          file_read  = file_src.read(128000)
          file_write = file_tgt.write(file_read)
+
       except:
          pass
+
       file_src.close()
       file_tgt.close()
 
-   def copy_dir( self, g_args, gluster ):
-      root_src_dir = g_args['source']['path']
-      root_tgt_dir = g_args['target']['path']
+   def copy_dir( self ):
+      root_src_dir = self.src_path
+      root_tgt_dir = self.tgt_path
       perm_dir=0755
 
-      if not gluster['target'].exists(root_tgt_dir):
-         gluster['target'].mkdir(g_args['target']['path'],perm_dir)
+      if not self.tgt_mount.exists(root_tgt_dir):
+         self.tgt_mount.mkdir(root_tgt_dir,perm_dir)
 
-      for (src_dir, dirs, files) in gluster['source'].walk( root_src_dir ):
+      for (src_dir, dirs, files) in self.src_mount.walk( root_src_dir ):
          tgt_dir =  src_dir.replace( root_src_dir, root_tgt_dir )
-         if not gluster['target'].exists( tgt_dir ):
-            gluster['target'].mkdir( tgt_dir, perm_dir )
+         if not self.tgt_mount.exists( tgt_dir ):
+            self.tgt_mount.mkdir( tgt_dir, perm_dir )
          for file_ in files:
             src_file = os.path.join( src_dir, file_ )
             tgt_file = os.path.join( tgt_dir, file_ )
 
-            if gluster['target'].exists( tgt_file ):
-               gluster['target'].unlink( tgt_file )
+            if self.tgt_mount.exists( tgt_file ):
+               self.tgt_mount.unlink( tgt_file )
 
-            self.create_file( tgt_file, gluster )
-            self.copy_file( src_file, tgt_file, gluster )
+            self.create_file( tgt_file )
+            self.copy_file( src_file, tgt_file )
 
 class Parse_Arguments:
   """
@@ -103,16 +113,17 @@ class Parse_Arguments:
 
 def main():
   a_parser = Parse_Arguments()
-  g_parser = gluster_parse.Parser()
   p_args   = a_parser.parse_args()
+
+  g_parser = gluster_parse.Parser()
   g_args   = {}
   g_args['source']   = g_parser.parse(p_args['gluster_source'])
   g_args['target']   = g_parser.parse(p_args['gluster_target'])
 
   gluster = {}
   gluster['source'] = gfapi.Volume(g_args['source']['host'], g_args['source']['volume'])
-  gluster['target'] = gfapi.Volume(g_args['target']['host'], g_args['target']['volume'])
   gluster['source'].mount()
+  gluster['target'] = gfapi.Volume(g_args['target']['host'], g_args['target']['volume'])
   gluster['target'].mount()
 
   Copier(p_args, g_args, gluster)
