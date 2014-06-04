@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python
 
 """
 syntax:
@@ -32,9 +32,11 @@ import argparse, re
 class Parser:
    """parse for the host, port, volume and path of a gluster url"""
 
-   def parse( self, volume ):
+   def parse( self, volume_array ):
       g_args = {}
 
+      # for volume in volume_array:
+      #    print volume
       try:
          g_args_match = re.match('^(?:gluster://)([^/]*)/([^/]*)(/.*)?$', volume).groups()
       except:

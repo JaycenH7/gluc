@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python
 
 import gfapi
 import gluster_parse, gluster_mount
@@ -112,11 +112,12 @@ class Parse_Arguments:
    """
 
    def __init__( self ):
-      self.parse_args()
+      pass
 
    def parse_args( self ):
       parser = argparse.ArgumentParser(description='Lists directory contents, like the unix ls command')
-      parser.add_argument('gluster_url', help='gluster volume to list files and directories')
+      parser.add_argument('gluster_url', nargs='+', help='gluster volume to list files and directories')
+      # parser.add_argument('gluster_url', help='gluster volume to list files and directories')
       parser.add_argument('-l', '--long', action="store_true", help='long listing format')
       return parser.parse_args().__dict__
 
@@ -126,10 +127,10 @@ def main():
    g_parser  = gluster_parse.Parser()
    g_args    = g_parser.parse( p_args['gluster_url'] )
 
-   g_vol = gluster_mount.Mounter( g_args )
-   g_vol = g_vol.mount()
+#    g_vol = gluster_mount.Mounter( g_args )
+#    g_vol = g_vol.mount()
 
-   Listing( p_args, g_args, g_vol )
+   # Listing( p_args, g_args, g_vol )
 
 if __name__ == '__main__':
    main()
