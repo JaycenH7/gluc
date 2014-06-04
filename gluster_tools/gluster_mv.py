@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import gfapi
-import gluster_parse, gluster_mount
+import gluster_parse, gluster_mount, gluster_evaluate
 import os, argparse, errno, re
 
 class Mover:
@@ -9,30 +9,13 @@ class Mover:
 
    def __init__( self, g_args, g_vol ):
       # declare instance variables
-      self.src_vol = g_vol['source']
-      self.src_path  = g_args['source']['path']
-      self.tgt_vol = g_vol['target']
-      self.tgt_path  = g_args['target']['path']
+      self.src_vol  = g_vol['source']
+      self.src_path = g_args['source']['path']
+      self.tgt_vol  = g_vol['target']
+      self.tgt_path = g_args['target']['path']
 
       # run program
-      self.eval_exist()
       self.run_move()
-
-   def eval_exist( self ):
-      if not self.src_vol.exists( self.src_path ):
-         print 'error:', self.src_path, 'does not exist'
-         raise SystemExit
-
-      elif self.tgt_vol.exists( self.tgt_path ):
-         self.eval_overwrite()
-
-   def eval_overwrite( self ):
-      print 'overwrite?',
-      response = raw_input()
-      try:
-         re.match( '^y', response.lower() )
-      except:
-         raise SystemExit
 
    def run_move( self ):
       try:
@@ -75,6 +58,9 @@ def main():
    g_vol['source'] = g_vol['source'].mount()
    g_vol['target'] = gluster_mount.Mounter( g_args['target'] )
    g_vol['target'] = g_vol['target'].mount()
+
+   g_eval = gluster_evaluate.Evaluator( g_args, g_vol )
+   g_args['target']['path'] = g_eval.eval_relation()
 
    Mover( g_args, g_vol )
 
