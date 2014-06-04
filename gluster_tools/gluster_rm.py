@@ -7,28 +7,33 @@ import os, argparse, errno, re
 class Remover:
    "Removes files and directories from source to destination"
 
-   def __init__( self, g_args, gluster ):
-      self.run_delete( g_args, gluster )
+   def __init__( self, g_args, g_vol ):
+      # declare instance variables
+      self.vol  = g_vol
+      self.path = g_args['path']
 
-   def run_delete( self, g_args, gluster ):
+      # run program
+      self.run_delete()
+
+   def run_delete( self ):
       try:
-         self.remove_file( g_args['path'], gluster )
+         self.remove_file( self.path )
       except OSError as error:
          if error.errno == errno.EISDIR:
-            self.remove_dir( g_args, gluster )
+            self.remove_dir()
          else: print error
 
-   def remove_file( self, g_tgt, gluster ):
-      gluster.unlink( g_tgt )
+   def remove_file( self, g_tgt ):
+      self.vol.unlink( g_tgt )
 
-   def remove_dir( self, g_args, gluster ):
-      root_src_dir = os.path.join( '.', g_args['path'])
+   def remove_dir( self ):
+      root_src_dir = os.path.join( '.', self.path )
 
-      for (src_dir, dirs, files) in gluster.walk( root_src_dir ,topdown=False):
+      for (src_dir, dirs, files) in self.vol.walk( root_src_dir , topdown=False ):
          for file_ in files:
             src_file = os.path.join( src_dir, file_ )
-            self.remove_file( src_file, gluster )
-         gluster.rmdir( src_dir )
+            self.remove_file( src_file )
+         self.vol.rmdir( src_dir )
 
 class Parse_Arguments:
    """
@@ -47,15 +52,16 @@ class Parse_Arguments:
       return parser.parse_args().__dict__
 
 def main():
-   a_parser = Parse_Arguments()
-   g_parser = gluster_parse.Parser()
-   p_args   = a_parser.parse_args()
-   g_args   = g_parser.parse(p_args['gluster_url'])
+   a_parser  = Parse_Arguments()
+   p_args    = a_parser.parse_args()
 
-   gluster = gfapi.Volume(g_args['host'], g_args['volume'])
-   gluster.mount()
+   g_parser  = gluster_parse.Parser()
+   g_args    = g_parser.parse( p_args['gluster_url'] )
 
-   Remover(g_args, gluster)
+   g_vol = gluster_mount.Mounter( g_args )
+   g_vol = g_vol.mount()
+
+   Remover( g_args, g_vol )
 
 if __name__ == '__main__':
    main()

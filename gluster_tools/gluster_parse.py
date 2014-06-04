@@ -27,43 +27,33 @@ example:
 
 """
 
-import re
+import argparse, re
 
 class Parser:
-  """parse for the host, port, volume and path of a gluster url"""
+   """parse for the host, port, volume and path of a gluster url"""
 
-  def __init__(self):
-    pass
+   def parse( self, volume ):
+      g_args = {}
 
-  def parse( self, volume ):
-    # Temporary ##############################################################################
-    # p_args['target_volume'], p_args = 'luster://storage.int.example.net/bigfiles/iso-images'
-    # p_args['target_volume'] = 'gluster://storage.int.example.net/bigfiles/iso-images'
-    # volume = 'gluster://storage.int.example.net:80/bigfiles/iso-images'
-    # volume = 'gluster://209.49.13.42:80/bigfiles/iso-images'
-    # Temporary ##############################################################################
+      try:
+         g_args_match = re.match('^(?:gluster://)([^/]*)/([^/]*)(/.*)?$', volume).groups()
+      except:
+         print 'Error: enter a valid volume URL'
+         raise SystemExit
+      id_group = g_args_match[0]
+      g_args['volume']   = g_args_match[1]
+      g_args['path']     = g_args_match[2]
 
-    g_args = {}
+      g_args['host'] = re.match('^([^:]*)(?::(\d*))?$', id_group).groups()[0]
+      g_args['port'] = re.match('^([^:]*)(?::(\d*))?$', id_group).groups()[1]
 
-    try:
-      g_args_match = re.match('^(?:gluster://)([^/]*)/([^/]*)(/.*)?$', volume).groups()
-    except:
-      print 'Error: enter a valid volume URL'
-      raise SystemExit
-    id_group = g_args_match[0]
-    g_args['volume']   = g_args_match[1]
-    g_args['path']     = g_args_match[2]
+      if g_args['path'] == None: g_args['path'] = '/'
+      if g_args['port'] == None: g_args['port'] = 24007
 
-    g_args['host'] = re.match('^([^:]*)(?::(\d*))?$', id_group).groups()[0]
-    g_args['port'] = re.match('^([^:]*)(?::(\d*))?$', id_group).groups()[1]
-
-    if g_args['path'] == None: g_args['path'] = '/'
-    if g_args['port'] == None: g_args['port'] = 24007
-
-    return g_args
+      return g_args
 
 def main():
-  pass
+   pass
 
 if __name__ == '__main__':
-  main()
+   main()

@@ -7,74 +7,38 @@ import os, argparse, errno, re
 class Mover:
    "moves files and directories from source to destination"
 
-   def __init__( self, g_args, gluster ):
-      self.eval_exist( g_args, gluster )
-      self.run_move( g_args, gluster )
+   def __init__( self, g_args, g_vol ):
+      # declare instance variables
+      self.src_vol = g_vol['source']
+      self.src_path  = g_args['source']['path']
+      self.tgt_vol = g_vol['target']
+      self.tgt_path  = g_args['target']['path']
 
-   def eval_exist( self, g_args, gluster ):
-      if not gluster['source'].exists(g_args['source']['path']):
-         print 'error:', g_args['source']['path'], 'does not exist'
-         raise SystemExit
-      if gluster['target'].exists(g_args['target']['path']):
-         self.eval_file( g_args, gluster )
-      elif gluster['source'].isfile(g_args['source']['path']) or \
-      gluster['source'].isdir(g_args['source']['path']):
-         gluster['target'].rename(
-            g_args['source']['path']
-         ,  g_args['target']['path']
-         )
+      # run program
+      self.eval_exist()
+      self.run_move()
+
+   def eval_exist( self ):
+      if not self.src_vol.exists( self.src_path ):
+         print 'error:', self.src_path, 'does not exist'
          raise SystemExit
 
-   def eval_file( self, g_args, gluster ):
-      if gluster['target'].isfile(g_args['target']['path']):
-         print 'overwrite?',
-         response = raw_input()
-         try:
-            re.match( '^y', response.lower() )
-         except:
-            raise SystemExit
+      elif self.tgt_vol.exists( self.tgt_path ):
+         self.eval_overwrite()
 
-   def create_file( self, g_tgt, gluster ):
-      gluster['target'].open(g_tgt, os.O_CREAT)
-
-   def run_move( self, g_args, gluster ):
-      g_src = g_args['source']['path']
-      g_tgt = g_args['target']['path']
-
+   def eval_overwrite( self ):
+      print 'overwrite?',
+      response = raw_input()
       try:
-         self.move_file( g_src, g_tgt,  gluster )
+         re.match( '^y', response.lower() )
+      except:
+         raise SystemExit
+
+   def run_move( self ):
+      try:
+         self.tgt_vol.rename( self.src_path, self.tgt_path )
       except OSError as error:
-         if error.errno == errno.EISDIR:
-            self.move_dir( g_args, gluster )
-         else: print error
-
-   def move_file( self, g_src, g_tgt, gluster ):
-      gluster['source'].unlink(g_tgt)
-      gluster['target'].rename(g_src, g_tgt)
-
-   def move_dir( self, g_args, gluster ):
-      root_src_dir = g_args['source']['path']
-      root_tgt_dir = g_args['target']['path']
-      perm_dir=0755
-
-      if not gluster['target'].exists( root_tgt_dir ):
-         gluster['target'].mkdir( g_args['target']['path'] )
-
-      for (src_dir, dirs, files) in gluster['source'].walk( root_src_dir ,topdown=False):
-         tgt_dir = src_dir.replace( root_src_dir, root_tgt_dir )
-         if not gluster['target'].exists( tgt_dir ):
-            gluster['target'].mkdir( tgt_dir, perm_dir )
-         for file_ in files:
-            src_file = os.path.join( src_dir, file_ )
-            tgt_file = os.path.join( tgt_dir, file_ )
-
-            if gluster['target'].exists( tgt_file ):
-               gluster['target'].unlink( tgt_file )
-
-            self.create_file( tgt_file, gluster )
-            self.move_file( src_file, tgt_file, gluster )
-
-         gluster['source'].rmdir( src_dir )
+         print error
 
 class Parse_Arguments:
    """
@@ -101,17 +65,18 @@ def main():
    a_parser = Parse_Arguments()
    g_parser = gluster_parse.Parser()
    p_args   = a_parser.parse_args()
+
    g_args   = {}
-   g_args['source']   = g_parser.parse(p_args['gluster_source'])
-   g_args['target']   = g_parser.parse(p_args['gluster_target'])
+   g_args['source'] = g_parser.parse( p_args['gluster_source'] )
+   g_args['target'] = g_parser.parse( p_args['gluster_target'] )
 
-   gluster = {}
-   gluster['source'] = gfapi.Volume(g_args['source']['host'], g_args['source']['volume'])
-   gluster['target'] = gfapi.Volume(g_args['target']['host'], g_args['target']['volume'])
-   gluster['source'].mount()
-   gluster['target'].mount()
+   g_vol = {}
+   g_vol['source'] = gluster_mount.Mounter( g_args['source'] )
+   g_vol['source'] = g_vol['source'].mount()
+   g_vol['target'] = gluster_mount.Mounter( g_args['target'] )
+   g_vol['target'] = g_vol['target'].mount()
 
-   Mover(g_args, gluster)
+   Mover( g_args, g_vol )
 
 if __name__ == '__main__':
    main()

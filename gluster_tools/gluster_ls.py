@@ -2,33 +2,34 @@
 
 import gfapi
 import gluster_parse, gluster_mount
-import os, argparse, stat, sys, time
+import os, stat, sys, time
 from pwd import getpwuid
+import argparse
 
 class Listing:
    """list files and directories in a gluster volume"""
 
-   def __init__( self, p_args, g_args, g_mount ):
+   def __init__( self, p_args, g_args, g_vol ):
       # declare instance variables
-      self.mount = g_mount
+      self.vol       = g_vol
       self.long_list = p_args['long']
-      self.path = g_args['path']
+      self.path      = g_args['path']
 
       # run program
       self.check_exist()
       self.run_list()
 
    def check_exist( self ):
-      if not self.mount.exists( self.path ):
+      if not self.vol.exists( self.path ):
          print 'error:', self.path , 'does not exist'
          raise SystemExit
 
    def run_list( self ):
-      if self.mount.isfile( self.path ):
+      if self.vol.isfile( self.path ):
          self.print_list( self.path )
 
-      elif self.mount.isdir( self.path ):
-         for li in self.mount.listdir( self.path ):
+      elif self.vol.isdir( self.path ):
+         for li in self.vol.listdir( self.path ):
             self.print_list( li )
 
       else: pass
@@ -40,11 +41,10 @@ class Listing:
       else:
          print target
 
-
    def print_stat( self, item ):
       """print permissions, owner and other info of a given file/directory"""
       file_ = os.path.join( self.path, item )
-      stat_info = self.mount.lstat( file_ )
+      stat_info = self.vol.lstat( file_ )
 
       self.stat_type( stat_info )
       self.stat_perm( stat_info )
@@ -114,7 +114,7 @@ class Parse_Arguments:
    def __init__( self ):
       self.parse_args()
 
-   def parse_args(self):
+   def parse_args( self ):
       parser = argparse.ArgumentParser(description='Lists directory contents, like the unix ls command')
       parser.add_argument('gluster_url', help='gluster volume to list files and directories')
       parser.add_argument('-l', '--long', action="store_true", help='long listing format')
@@ -123,14 +123,13 @@ class Parse_Arguments:
 def main():
    a_parser  = Parse_Arguments()
    p_args    = a_parser.parse_args()
-
    g_parser  = gluster_parse.Parser()
    g_args    = g_parser.parse( p_args['gluster_url'] )
 
-   g_mounter = gluster_mount.Mounter()
-   g_mount   = g_mounter.mount( g_args )
+   g_vol = gluster_mount.Mounter( g_args )
+   g_vol = g_vol.mount()
 
-   Listing( p_args, g_args, g_mount )
+   Listing( p_args, g_args, g_vol )
 
 if __name__ == '__main__':
    main()
