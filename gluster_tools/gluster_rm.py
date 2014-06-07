@@ -2,7 +2,7 @@
 
 import gfapi
 import gluster_parse, gluster_mount
-import os, argparse, errno, re
+import os, argparse, errno
 
 class Remover:
    "Removes files and directories from source to destination"
@@ -48,20 +48,20 @@ class Parse_Arguments:
       parser = argparse.ArgumentParser(
          description = 'remove files/directories from source to destination'
       )
-      parser.add_argument( 'gluster_url' , help='source file/directory to move from')
+      parser.add_argument( 'gluster_url', nargs='+', help='source file/directory to move from')
       return parser.parse_args().__dict__
 
 def main():
    a_parser  = Parse_Arguments()
    p_args    = a_parser.parse_args()
-
    g_parser  = gluster_parse.Parser()
-   g_args    = g_parser.parse( p_args['gluster_url'] )
 
-   g_vol = gluster_mount.Mounter( g_args )
-   g_vol = g_vol.mount()
+   for g_url in p_args['gluster_url']:
+       g_args = g_parser.parse( g_url )
+       g_vol  = gluster_mount.Mounter( g_args )
+       g_vol  = g_mntr.mount()
 
-   Remover( g_args, g_vol )
+       Remover( g_args, g_vol )
 
 if __name__ == '__main__':
    main()

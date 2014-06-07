@@ -32,15 +32,13 @@ import argparse, re
 class Parser:
    """parse for the host, port, volume and path of a gluster url"""
 
-   def parse( self, volume_array ):
+   def parse( self, gluster_url ):
       g_args = {}
 
-      # for volume in volume_array:
-      #    print volume
       try:
-         g_args_match = re.match('^(?:gluster://)([^/]*)/([^/]*)(/.*)?$', volume).groups()
+         g_args_match = re.match('^(?:gluster://)([^/]*)/([^/]*)(/.*)?$', gluster_url).groups()
       except:
-         print 'Error: enter a valid volume URL'
+         print "'%s' is not a valid gluster URL" % gluster_url
          raise SystemExit
       id_group = g_args_match[0]
       g_args['volume']   = g_args_match[1]

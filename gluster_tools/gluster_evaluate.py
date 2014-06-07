@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import os
+import os, re
 
 class Evaluator:
    """evaluates the source and directory file type"""
@@ -11,11 +11,19 @@ class Evaluator:
       self.src_path = g_args['source']['path']
       self.tgt_vol  = g_vol['target']
       self.tgt_path = g_args['target']['path']
+      self.mult = g_args['mult']
       self.src_type = None
       self.tgt_type = None
 
       #run program
+      self.check_mult()
       self.run_eval()
+
+   def check_mult( self ):
+       if self.mult == 'multiple':
+           if not self.tgt_vol.isdir( self.tgt_path ):
+               print "error: '%s' is not a directory" % self.tgt_path
+               raise SystemExit
 
    def run_eval( self ):
       self.eval_src_type()
@@ -81,10 +89,10 @@ class Evaluator:
       # print 'new path:', self.tgt_path
 
    def eval_overwrite( self ):
-      print 'overwrite?',
+      print 'overwrite?'
       response = raw_input()
       try:
-         re.match( '^y',response.lower() ).group()
+         re.match( '^y', response.lower() ).group()
       except:
          raise SystemExit
 

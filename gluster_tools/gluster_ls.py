@@ -11,12 +11,14 @@ class Listing:
 
    def __init__( self, p_args, g_args, g_vol ):
       # declare instance variables
+      self.p_args    = p_args
       self.vol       = g_vol
       self.long_list = p_args['long']
       self.path      = g_args['path']
 
       # run program
       self.check_exist()
+      self.print_arg()
       self.run_list()
 
    def check_exist( self ):
@@ -24,13 +26,21 @@ class Listing:
          print 'error:', self.path , 'does not exist'
          raise SystemExit
 
+   def print_arg( self ):
+       if len( self.p_args['gluster_url'] ) > 1:
+           print "%s:" % self.path
+
    def run_list( self ):
       if self.vol.isfile( self.path ):
          self.print_list( self.path )
 
       elif self.vol.isdir( self.path ):
-         for li in self.vol.listdir( self.path ):
+         dir_list = self.vol.listdir( self.path )
+         if len( dir_list ) == 0:
+             print "( empty directory )"
+         for li in dir_list:
             self.print_list( li )
+         print
 
       else: pass
 
@@ -117,7 +127,6 @@ class Parse_Arguments:
    def parse_args( self ):
       parser = argparse.ArgumentParser(description='Lists directory contents, like the unix ls command')
       parser.add_argument('gluster_url', nargs='+', help='gluster volume to list files and directories')
-      # parser.add_argument('gluster_url', help='gluster volume to list files and directories')
       parser.add_argument('-l', '--long', action="store_true", help='long listing format')
       return parser.parse_args().__dict__
 
@@ -125,12 +134,12 @@ def main():
    a_parser  = Parse_Arguments()
    p_args    = a_parser.parse_args()
    g_parser  = gluster_parse.Parser()
-   g_args    = g_parser.parse( p_args['gluster_url'] )
+   for g_url in p_args['gluster_url']:
+       g_args = g_parser.parse( g_url )
+       g_vol  = gluster_mount.Mounter( g_args )
+       g_vol  = g_mntr.mount()
 
-#    g_vol = gluster_mount.Mounter( g_args )
-#    g_vol = g_vol.mount()
-
-   # Listing( p_args, g_args, g_vol )
+       Listing( p_args, g_args, g_vol )
 
 if __name__ == '__main__':
    main()
