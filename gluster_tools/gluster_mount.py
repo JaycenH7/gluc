@@ -22,7 +22,7 @@ class Mounter:
       try:
          sock = socket.socket()
          sock.settimeout(10)
-         sock.connect(( self.host, int(self.port) ))
+         sock.connect(( self.host, int( self.port) ))
          sock.close()
       except IOError as error:
          if error.errno == -errno.EIO:
@@ -51,6 +51,7 @@ class Mounter:
    def mount_volume( self ):
       mnt_vol = gfapi.Volume( self.host, self.volume )
       mnt_vol.mount()
+
       return mnt_vol
 
 def main():

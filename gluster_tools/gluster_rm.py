@@ -59,7 +59,7 @@ def main():
    for g_url in p_args['gluster_url']:
        g_args = g_parser.parse( g_url )
        g_vol  = gluster_mount.Mounter( g_args )
-       g_vol  = g_mntr.mount()
+       g_vol  = g_vol.mount()
 
        Remover( g_args, g_vol )
 

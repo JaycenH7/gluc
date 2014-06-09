@@ -23,7 +23,7 @@ class Listing:
 
    def check_exist( self ):
       if not self.vol.exists( self.path ):
-         print 'error:', self.path , 'does not exist'
+         print "error:'%s' does not exist" % self.path
          raise SystemExit
 
    def print_arg( self ):
@@ -40,7 +40,7 @@ class Listing:
              print "( empty directory )"
          for li in dir_list:
             self.print_list( li )
-         print
+         print; print
 
       else: pass
 
@@ -49,7 +49,7 @@ class Listing:
          self.print_stat( target )
 
       else:
-         print target
+         sys.stdout.write( target  + ' ')
 
    def print_stat( self, item ):
       """print permissions, owner and other info of a given file/directory"""
@@ -137,7 +137,7 @@ def main():
    for g_url in p_args['gluster_url']:
        g_args = g_parser.parse( g_url )
        g_vol  = gluster_mount.Mounter( g_args )
-       g_vol  = g_mntr.mount()
+       g_vol  = g_vol.mount()
 
        Listing( p_args, g_args, g_vol )
 
