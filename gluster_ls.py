@@ -115,6 +115,9 @@ class Listing:
          stat_name
       ))
 
+      print 'stat_info.st_uid', stat_info.st_uid
+      print 'stat_info.st_gid', stat_info.st_gid
+
 class Parse_Arguments:
    """
    parse arguments for source file/directory and

@@ -1,13 +1,21 @@
 #!/usr/bin/python
 
-import os, sys, argparse, pwd
 import gfapi
+import os, sys, argparse, pwd
 import gluster_parse, gluster_mount
 
 class Chown:
    """
    Change file owner and group
    """
+
+# process
+# 1. check if uid and/or guid is parsed
+# 2. check given uid/gid exists
+# 2. check assumed parameters
+#   a. if uid given, find file's original gid
+#   b. if gid given, find file's original uid
+# 3. run program
 
 # allow users and group names to be input by
 # using reading '/etc/passwd'
@@ -25,7 +33,7 @@ class Chown:
 
 # create 2nd form:
 #    change owner and group for multiple files
-    
+
 # create 3rd form:
 #    change owner and group using a reference file
 
@@ -46,46 +54,58 @@ class Chown:
       self.group     = p_args[':group']
 
       # run program
-      self.check_exist()
+      self.check_path()
       self.check_pwd()
       self.check_stat()
       self.run_chown()
 
-   def check_exist( self ):
+   def check_path( self ):
       if not self.vol.exists( self.path ):
          print "error:'%s' does not exist" % self.path
          raise SystemExit
 
    def check_pwd( self ):
+       print 'owner:', self.owner
+       print 'group', self.group
+
+   def check_uid( self ):
        """
-       return user/group if string provided
+       find uid/gid in passwd database
        """
+       pass
         # if 'owner' is integer then check user id exists
         # else if 'owner' is string, convert user name to
         # uid
-       passwd = pwd.getpwall()
-       try:
-          int( self.owner )
-          self.owner_is_num = True
-       except:
-          self.owner_is_num = False
-       print 'owner is num:', self.owner_is_num
+#        passwd = pwd.getpwall()
+#        try:
+#           int( self.owner )
+#           self.owner_is_num = True
+#        except:
+#           self.owner_is_num = False
+#        print 'owner is num:', self.owner_is_num
+#
+#        for user in passwd:
+#            if self.owner_is_num == True:
+#                if user.pw_uid == int(self.owner):
+#                    print user.pw_name, 'exists'
+#                    return user.pw_name
+#            else:
+#                if user.pw_name == self.owner:
+#                    print user.pw_name, 'exists'
+#                    return user.pw_name
+#
+#        print "error: '%s' does not exist" % self.owner
 
-       for user in passwd:
-           if self.owner_is_num == True:
-               if user.pw_uid == int(self.owner):
-                   print 'integer'
-                   print user.pw_name, 'exists'
-                   return user.pw_name
-           else:
-               if user.pw_name == self.owner:
-                   print 'string'
-                   print user.pw_name, 'exists'
-                   return user.pw_name
-
-       print "error: '%s' does not exist" % self.owner
+   def check_guid( self ):
+       """
+       return user/group if string provided
+       """
+       pass
 
    def check_stat( self ):
+       """
+       get the default uid/gid from the target file
+       """
        pass
 
    def run_chown( self ):
@@ -108,10 +128,16 @@ class Parse_Arguments:
    def __init__( self ):
       pass
 
+  def group( self ):
+      pass
+
+
    def parse_args( self ):
       parser = argparse.ArgumentParser(description='Lists directory contents, like the unix ls command')
       parser.add_argument('owner', nargs='?', help='owner to change file to')
       parser.add_argument(':group', nargs='?', help='group to change file to')
+      parser.add_argument('owner', help='owner to change file to')
+      parser.add_argument(':group', help='group to change file to')
       parser.add_argument('gluster_url', nargs='+', help='file to change owner and/or group')
       return parser.parse_args().__dict__
 
